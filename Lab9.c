@@ -1,6 +1,6 @@
 // Lab9.c
 // Runs on LM4F120 or TM4C123
-// Student names: change this to your names or look very silly
+// Student names: Danica Corbita & Deepanshi Sharma 
 // Last modification date: change this to the last modification date or look very silly
 // Last Modified: 11/14/2018
 
@@ -104,7 +104,8 @@ int main1(void){ // Make this main to test FiFo
 // Get fit from excel and code the convert routine with the constants
 // from the curve-fit
 uint32_t Convert(uint32_t input){
-  return 0; //replace with your calibration code from Lab 8
+  Position = ((input*446)/1000)-487;
+  return(Position);
 }
 
 
@@ -168,23 +169,26 @@ int main(void){
 void SysTick_Handler(void){ // every 20 ms
  //Sample ADC, convert to distance, create 8-byte message, send message out UART1
 	int i=0;
+	unsigned int temp=0;
+	unsigned int convert=0;
 	PF2 ^= 0x04;      // Heartbeat
 	adc_data = ADC_In();
 	state=1;
 	PF2 ^= 0x04;      // Heartbeat
-	adc_data = Convert(adc_data);
+	convert = Convert(adc_data);
+	temp = convert;
 	signal[0] = 0x02;					// packet start
-	dec = adc_data / 1000;
-	adc_data %= 1000;
+	dec = temp / 1000;
+	temp %= 1000;
 	signal[1] = dec + 0x30;		// ASCII char of first number
 	signal[2] = 0x2E;					// decimal point
-	dec = adc_data / 100;
-	adc_data %= 100;
+	dec = temp / 100;
+	temp %= 100;
 	signal[3] = dec + 0x30;		// ASCII char of second number
-	dec = adc_data / 10;
-	adc_data %= 10;
+	dec = temp / 10;
+	temp %= 10;
 	signal[4] = dec + 0x30;		// ASCII char of third number
-	signal[5] = adc_data + 0x30;		// ASCII char of last number
+	signal[5] = temp + 0x30;		// ASCII char of last number
 	signal[6] = 0x0D;					// ASCII char of carriage return
 	signal[7] = 0x03;					// packet end
 	for(i=0;i < 8; i++){

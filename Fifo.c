@@ -9,14 +9,18 @@
 // --UUU-- Declare state variables for Fifo
 //        buffer, put and get indexes
 
-
+	uint32_t static place; 	// pointer for put function
+	uint32_t static get; 		// pointer for get function 
+	uint32_t static count; 
+	int8_t static FIFO[8]; 						// hold elements for 6?? unsure about size 
+	
 // *********** Fifo_Init**********
 // Initializes a software FIFO of a
 // fixed size and sets up indexes for
 // put and get operations
 void Fifo_Init(){
 // --UUU-- Complete this
-
+	place = get = count = 0; 
 }
 
 // *********** Fifo_Put**********
@@ -26,8 +30,14 @@ void Fifo_Init(){
 //         failure is when the buffer is full
 uint32_t Fifo_Put(char data){
 // --UUU-- Complete this routine
-
-  return(42); //Replace this
+	if (count == 8) {
+		return 0; 					//FIFO full, can't place more 
+	} else { 		 
+		FIFO[place] = data;
+		place ++; 					// increment pointer
+		count ++; 				// increment counter 
+		return 1; 
+	}
 }
 
 // *********** FiFo_Get**********
@@ -37,8 +47,14 @@ uint32_t Fifo_Put(char data){
 //         failure is when the buffer is empty
 uint32_t Fifo_Get(char *datapt){ 
 //--UUU-- Complete this routine
-
-  return(42); // Replace this
+	if (count == 0) {
+		return 0; 				//buffer is empty 
+	} else {
+		*datapt = FIFO[get]; 
+		get++; 
+		count--; 
+		return 1; 
+	}
 }
 
 

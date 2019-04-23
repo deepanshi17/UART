@@ -21,6 +21,9 @@
 #include "Uart.h"
 #include "../inc/tm4c123gh6pm.h"
 uint32_t DataLost; 
+#define PF1       (*((volatile uint32_t *)0x40025008))
+#define PF2       (*((volatile uint32_t *)0x40025010))
+#define PF3       (*((volatile uint32_t *)0x40025020))
 // Initialize UART1
 // Baud rate is 115200 bits/sec
 // Make sure to turn ON UART1 Receiver Interrupt (Interrupt 6 in NVIC)
@@ -54,7 +57,7 @@ void Uart_Init(void){
 	UART1_IM_R |= 0x10;
 	UART1_IFLS_R &= ~0x38;
 	UART1_IFLS_R |= 0x10;
-	NVIC_PRI1_R &= 0xFF00FFFF;		// UART0 = priority 3
+	NVIC_PRI1_R &= 0xFF00FFFF;		// UART0 = priority 3		// uart1??? 
 	NVIC_PRI1_R	|= 0x00800000; 		
 	NVIC_EN0_R |= 0x40; 					// enable interrupt 6 in NVIC
 }
@@ -63,7 +66,9 @@ void Uart_Init(void){
 // spin if RxFifo is empty
 // Receiver is interrupt driven
 char Uart_InChar(void){
-  return 0; // --UUU-- remove this, replace with real code
+  char character; 
+	while (Fifo_Get(&character) == 0) {} ; // if software FIFO empty, do nothing
+	return character; 
 }
 
 //------------UART1_InMessage------------
@@ -72,8 +77,9 @@ char Uart_InChar(void){
 //    or until max length of the string is reached.
 // Input: pointer to empty buffer of 8 characters
 // Output: Null terminated string
-// THIS FUNCTION IS OPTIONAL
+// THIS FUNCTION IS OPTIONAL // oh yes 
 void UART1_InMessage(char *bufPt){
+	
 }
 
 //------------UART1_OutChar------------
@@ -91,5 +97,16 @@ void Uart_OutChar(char data){
 // hardware RX FIFO goes from 7 to 8 or more items
 // UART receiver Interrupt is triggered; This is the ISR
 void UART1_Handler(void){
+	int frames; 
+	int RxCounter = 0; 
   // --UUU-- complete with your code
-}
+	PF2 ^= 0x04 ; 					// heartbeat 
+	PF2 ^= 0x04 ; 
+	while ( (UART1_FR_R & 0x0018) == 0) {
+		frames = (UART1_DR_R & 0xFF); 	// gets data from uart 
+		Fifo_Put(frames) ; }
+		RxCounter++; 
+		UART1_ICR_R = 0x10; 						// clears flag 
+		PF2 ^= 0x04 ; 
+	}
+
