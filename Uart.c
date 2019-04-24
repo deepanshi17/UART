@@ -48,17 +48,15 @@ void Uart_Init(void){
 	UART1_CTL_R = 0x0301;					//enable TXE, RXE, and UART
 	
 	
-	GPIO_PORTC_PCTL_R = (GPIO_PORTC_PCTL_R&0xFF00FFFF)+0x00220000;
+	GPIO_PORTC_PCTL_R |= 0x00220000; 
 	GPIO_PORTC_AFSEL_R |= 0x30;		//alt function 
 	GPIO_PORTC_DEN_R |= 0x30;			//digital analog PC4 and PC5
 	GPIO_PORTC_AMSEL_R &= ~0x30;	//no analog on PC4 and PC5
 	
 	
 	UART1_IM_R |= 0x10;
-	UART1_IFLS_R &= ~0x38;
 	UART1_IFLS_R |= 0x10;
-	NVIC_PRI1_R &= 0xFF00FFFF;		// UART0 = priority 3		// uart1??? 
-	NVIC_PRI1_R	|= 0x00800000; 		
+	NVIC_PRI1_R	|= 0xE00000; 	
 	NVIC_EN0_R |= 0x40; 					// enable interrupt 6 in NVIC
 }
 
@@ -102,9 +100,10 @@ void UART1_Handler(void){
   // --UUU-- complete with your code
 	PF2 ^= 0x04 ; 					// heartbeat 
 	PF2 ^= 0x04 ; 
-	while ( (UART1_FR_R & 0x0018) == 0) {
+	while ( (UART1_FR_R & 0x0010) == 0) {
 		frames = (UART1_DR_R & 0xFF); 	// gets data from uart 
-		Fifo_Put(frames) ; }
+		Fifo_Put(frames) ; 
+	}
 		RxCounter++; 
 		UART1_ICR_R = 0x10; 						// clears flag 
 		PF2 ^= 0x04 ; 

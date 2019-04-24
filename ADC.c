@@ -21,6 +21,8 @@ void ADC_Init(void){ volatile int delay;
 	delay=4;
 	delay=5;
 	delay = 0; 
+	delay = 0; 
+	delay = 0; 
 	GPIO_PORTD_DIR_R &= ~0x04	; 		// Port D is input 
 	GPIO_PORTD_AFSEL_R |= 0x04; 		
 	GPIO_PORTD_DEN_R &= ~0x04	;			// disable Port D digital 
@@ -33,6 +35,13 @@ void ADC_Init(void){ volatile int delay;
 	delay = 4; 
 	delay = 5; 
 	delay = 6;
+	delay = 0; 
+	delay = 0; 
+	delay = 0; 
+	delay = 0; 
+	delay = 5; 
+	delay = 6;
+	delay = 0; 
 	delay = 0; 
 	delay = 0; 
 	delay = 0; 

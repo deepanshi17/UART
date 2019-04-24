@@ -46,7 +46,7 @@ unsigned int adc_data=0;
 unsigned char dec=0;
 unsigned int TxCounter=0;
 int state=0;
-char packetptr;
+char dataptr;
 
 void SysTick_Init(void){
 	NVIC_ST_CTRL_R = 0; 						
@@ -60,13 +60,14 @@ void SysTick_Init(void){
 void PortF_Init(void){
 // Intialize PortF for hearbeat
 	volatile int delay=0;
-	SYSCTL_RCGCGPIO_R &= ~0x20;		// enable port F clock
+//	SYSCTL_RCGCGPIO_R &= ~0x20;		// enable port F clock
 	SYSCTL_RCGCGPIO_R |= 0x20;
-	delay=0;											// wait for clock to stabilize
-	GPIO_PORTF_DIR_R &= ~0x0E;		// set PF1 - PF3 as output
+	delay=0;							
+	GPIO_PORTF_LOCK_R = GPIO_LOCK_KEY ; 
+	GPIO_PORTF_CR_R |= 0xFF	; 
+//	GPIO_PORTF_DIR_R &= ~0x0E;		// set PF1 - PF3 as output
 	GPIO_PORTF_DIR_R |= 0x0E;
-	GPIO_PORTF_AFSEL_R &= ~0x0E;	// disable alternate function for PF1 - PF3
-	GPIO_PORTF_DEN_R &= ~0x0E;		// enable GPIO for PF1 - PF3
+//	GPIO_PORTF_DEN_R &= ~0x0E;		// enable GPIO for PF1 - PF3
 	GPIO_PORTF_DEN_R |= 0x0E;
 }
 
@@ -117,49 +118,27 @@ int main(void){
   ST7735_InitR(INITR_REDTAB);
   ADC_Init();    // initialize to sample ADC
   PortF_Init();
-	SysTick_Init();
   Uart_Init();       // initialize UART
   ST7735_SetCursor(0,0);
   LCD_OutFix(0);
   ST7735_OutString(" cm");
 //Enable SysTick Interrupt by calling SysTick_Init()
+	SysTick_Init();
   EnableInterrupts();
   while(1){
     //--UUU--Complete this  - see lab manual
-		while(state == 0){
-		}																	// wait until adc mailbox is full
-		state = 0;												// clear state of mailbox
+//		while(state == 0){
+//		}																	// wait until adc mailbox is full
+		Fifo_Get(&dataptr);
 		ST7735_SetCursor(0,0);						// set cursor to left corner
-		do{
-			Fifo_Get(&packetptr);
-			data[0] = packetptr; 								// waits until fifo isn't empty
-		}while (data[0] == 0x00);
-		
-		for(int j=1; j < 8; j++){								// place fifo data into output array
-			Fifo_Get(&packetptr);
-			data[j] = packetptr;
-		}
-		
-		if((data[0] == 0x02) && (data[7] == 0x03)){
-			data[0] = 0;											// reset packet start char
-			data[7] = 0;											// reset packet end char
-			
-			for(int i=1; i < 6; i++){
-				char place = 0;							// place holding character for debugging purposes
-				place = data[i];
-				ST7735_OutChar(place);				// output character to lcd
-				data[i] = 0;										// reset index in output array
+		if(dataptr == 0x02){
+			Fifo_Get(&dataptr);
+		while(dataptr != 0x03){
+		if(dataptr != 0x0D)
+		ST7735_OutChar(dataptr);				// output character to lcd
+		Fifo_Get(&dataptr);
 			}
-			
-			ST7735_SetCursor(6,0);					// set cursor to end
-			ST7735_OutString(" cm.");				// print " cm."
-			
-		}
-		
-		else{
-			for(int x=0;x < 8; x++){								// reset indexes in output array
-				data[x] = 0;
-			}
+			ST7735_SetCursor(0,0);					// set cursor to end
 		}
   }
 }
